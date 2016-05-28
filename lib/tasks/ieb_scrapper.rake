@@ -3,7 +3,7 @@ require 'capybara/dsl'
 require 'pp'
 
 desc 'Lee la base de datos de InvierteEnBolsa'
-task scrap_ieb: :environment do
+task scrape_ieb: :environment do
   # Use PhantomJS
   require 'capybara/poltergeist'
   Capybara.register_driver :poltergeist_custom do |app|
@@ -41,7 +41,7 @@ class Scrapper
     puts "#{company_tds.length} fetched"
 
     company_tds.each do |company_td|
-      # next if company_td[:name] <= 'Vidrala'
+      next if company_td[:name] < 'Rovi'
       next if company_td[:name] == 'Bodegas Riojanas' # los años no están puestos
       next if company_td[:name] == 'Clínica Baviera' # los años no están puestos
 
@@ -52,28 +52,39 @@ class Scrapper
       company.country, company.sector = first('h3.subtitulo').text.split('.').map { |o| o.split(':').last.strip }
       company.save!
 
-      # within 'table.cuarta-tabla.fht-table-init' do
-      #   years = all('thead th.dato').map { |o| o.text.gsub(/[^\d]/, '').to_i }
-      #   all('tbody tr').each do |row|
-      #     ratio_name = row.find('td.info').text.strip
-      #
-      #     next if ratio_name == '' or ratio_name == '%' or ratio_name == 'Observaciones'
-      #     if company.name == 'Aviva' and ratio_name == 'BPA ordinario'
-      #       aviva += 1
-      #       next if aviva == 2
-      #     end
-      #
-      #     ratio = Ratio.find_or_create_by! name: ratio_name
-      #     row.all('td.dato').zip(years).each do |td_dato, year|
-      #       value = td_dato.text.gsub('%', '').strip
-      #       next if value == ''
-      #       value = value.gsub('.', '').gsub(',', '.')
-      #       v = Value.find_or_initialize_by company: company, ratio: ratio, year: year
-      #       v.value = value
-      #       v.save!
-      #     end
-      #   end
-      # end
+      within 'table.cuarta-tabla.fht-table-init' do
+        years = all('thead th.dato').map { |o| o.text.gsub(/[^\d]/, '').to_i }
+        all('tbody tr').each do |row|
+          ratio_name = row.find('td.info').text.strip
+
+          next if ratio_name == '' or ratio_name == '%'
+          if company.name == 'Aviva' and ratio_name == 'BPA ordinario'
+            aviva += 1
+            next if aviva == 2
+          end
+
+          if ratio_name == 'Observaciones'
+            row.all('td.dato').zip(years).each do |td_dato, year|
+              next if td_dato.text == ''
+              text = td_dato.first('div.hidden-mas-informacion-observaciones', visible: false)['innerHTML']
+              text = Rails::Html::FullSanitizer.new.sanitize(text).from(2).strip # remove span element
+              analysis = Analysis.find_or_initialize_by company: company, year: year, expert: 'IEB'
+              analysis.text = text
+              analysis.save!
+            end
+          else
+            ratio = Ratio.find_or_create_by! name: ratio_name
+            row.all('td.dato').zip(years).each do |td_dato, year|
+              value = td_dato.text.gsub('%', '').strip
+              next if value == ''
+              value = value.gsub('.', '').gsub(',', '.')
+              v = Value.find_or_initialize_by company: company, ratio: ratio, year: year
+              v.value = value
+              v.save!
+            end
+          end
+        end
+      end
       puts 'done'
     end
 
