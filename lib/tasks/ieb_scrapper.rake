@@ -31,8 +31,8 @@ namespace :ieb do
       value.save!
     end
     # No tienen los años puestos en la web
-    Company.find_by_name('General Electric').destroy!
-    Company.find_by_name('Renta Corporación').destroy!
+    Company.find_by_name('General Electric').try :destroy!
+    Company.find_by_name('Renta Corporación').try :destroy!
   end
 end
 
@@ -54,9 +54,9 @@ class Scrapper
     puts "#{company_tds.length} fetched"
 
     company_tds.each do |company_td|
-      next if company_td[:name] < 'Rovi'
-      next if company_td[:name] == 'Bodegas Riojanas' # los años no están puestos
-      next if company_td[:name] == 'Clínica Baviera' # los años no están puestos
+      # next if company_td[:name] < 'Rovi'
+      # los años no están puestos
+      next if %w(Bodegas\ Riojanas Clínica\ Baviera General\ Electric Renta\ Corporación).include? company_td[:name]
 
       print "Fetching #{company_td[:name]}..."
       visit company_td[:url]
@@ -67,10 +67,15 @@ class Scrapper
 
       within 'table.cuarta-tabla.fht-table-init' do
         years = all('thead th.dato').map { |o| o.text.gsub(/[^\d]/, '').to_i }
+        ratio_name = nil
         all('tbody tr').each do |row|
+          prev_ratio_name = ratio_name
           ratio_name = row.find('td.info').text.strip
 
-          next if ratio_name == '' or ratio_name == '%'
+          next if ratio_name == ''
+          ratio_name = "#{prev_ratio_name} [Var%]" if ratio_name == '%'
+
+          # workaround
           if company.name == 'Aviva' and ratio_name == 'BPA ordinario'
             aviva += 1
             next if aviva == 2
