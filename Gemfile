@@ -51,4 +51,5 @@ group :scrapper do
   gem 'capybara'
   gem 'selenium-webdriver'
   gem 'poltergeist'
+  gem 'ruby-progressbar'
 end
