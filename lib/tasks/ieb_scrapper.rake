@@ -2,25 +2,38 @@ require 'capybara'
 require 'capybara/dsl'
 require 'pp'
 
-desc 'Lee la base de datos de InvierteEnBolsa'
-task scrape_ieb: :environment do
-  # Use PhantomJS
-  require 'capybara/poltergeist'
-  Capybara.register_driver :poltergeist_custom do |app|
-    Capybara::Poltergeist::Driver.new app,
-                                      phantomjs_options: %w(--load-images=no --ignore-ssl-errors=yes)
+namespace :ieb do
+  desc 'Lee la base de datos de InvierteEnBolsa'
+  task scrape: :environment do
+    # Use PhantomJS
+    require 'capybara/poltergeist'
+    Capybara.register_driver :poltergeist_custom do |app|
+      Capybara::Poltergeist::Driver.new app,
+                                        phantomjs_options: %w(--load-images=no --ignore-ssl-errors=yes)
+    end
+    Capybara.current_driver = :poltergeist_custom
+    Capybara.javascript_driver = :poltergeist_custom
+
+    # Use Firefox
+    # Capybara.current_driver = :selenium
+
+    # Capybara.app_host = 'http://www.invertirenbolsa.info'
+    Capybara.run_server = false  # disable Rack server, we are accessing a remote web
+    Capybara.default_max_wait_time = 5
+
+    Scrapper.new.run
   end
-  Capybara.current_driver = :poltergeist_custom
-  Capybara.javascript_driver = :poltergeist_custom
 
-  # Use Firefox
-  # Capybara.current_driver = :selenium
-
-  # Capybara.app_host = 'http://www.invertirenbolsa.info'
-  Capybara.run_server = false  # disable Rack server, we are accessing a remote web
-  Capybara.default_max_wait_time = 5
-
-  Scrapper.new.run
+  desc 'Arreglar fallos de los datos de IEB'
+  task fix: :environment do
+    Value.joins(:company).where(year: 199, companies: { name: 'ACS' }).each do |value|
+      value.year = 1996
+      value.save!
+    end
+    # No tienen los años puestos en la web
+    Company.find_by_name('General Electric').destroy!
+    Company.find_by_name('Renta Corporación').destroy!
+  end
 end
 
 class Scrapper
