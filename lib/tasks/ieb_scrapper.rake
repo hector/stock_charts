@@ -20,6 +20,7 @@ namespace :ieb do
     # Capybara.app_host = 'http://www.invertirenbolsa.info'
     Capybara.run_server = false  # disable Rack server, we are accessing a remote web
     Capybara.default_max_wait_time = 5
+    Capybara.wait_on_first_by_default = true
 
     Scrapper.new.run
   end
