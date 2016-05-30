@@ -73,7 +73,7 @@ namespace :csv do
       bar = ProgressBar.create title: 'Progress', total: years.size * companies.size * ratios.size
 
       # header
-      csv << %w(Nombre Valor) + years.to_a + %w(Empresa Ticker Sector Ratio)
+      csv << %w(Nombre) + years.to_a + %w(Empresa Ticker Sector Ratio)
 
       # values
       companies.each do |company|
