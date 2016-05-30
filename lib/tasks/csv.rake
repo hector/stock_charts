@@ -78,6 +78,7 @@ namespace :csv do
       # values
       companies.each do |company|
         ratios.each do |ratio|
+          next if Value.where(company: company, ratio: ratio).count < 1 # a company may not have certain ratios
           row = ["#{company.ticker}|#{ratio.name}"]
           years.each do |year|
             value = Value.where(company: company, ratio: ratio, year: year).first
