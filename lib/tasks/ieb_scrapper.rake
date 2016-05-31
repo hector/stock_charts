@@ -55,7 +55,6 @@ class Scrapper
     puts "#{company_tds.length} fetched"
 
     company_tds.each do |company_td|
-      # next if company_td[:name] < 'Rovi'
       # los años no están puestos
       next if %w(Bodegas\ Riojanas Clínica\ Baviera General\ Electric Renta\ Corporación).include? company_td[:name]
 
@@ -74,7 +73,12 @@ class Scrapper
           ratio_name = row.find('td.info').text.strip
 
           next if ratio_name == ''
-          ratio_name = "#{prev_ratio_name} [Var%]" if ratio_name == '%'
+          if ratio_name == '%'
+            ratio_name = "#{prev_ratio_name} [Var%]"
+            anual_variation_ratio = true
+          else
+            anual_variation_ratio = false
+          end
 
           # workaround
           if company.name == 'Aviva' and ratio_name == 'BPA ordinario'
@@ -96,7 +100,7 @@ class Scrapper
             row.all('td.dato').zip(years).each do |td_dato, year|
               value = td_dato.text.gsub('%', '').strip
               next if value == ''
-              value = value.gsub('.', '').gsub(',', '.')
+              value = value.gsub('.', '').gsub(',', '.') unless anual_variation_ratio
               v = Value.find_or_initialize_by company: company, ratio: ratio, year: year
               v.value = value
               v.save!
