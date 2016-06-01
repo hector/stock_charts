@@ -1,0 +1,16 @@
+th {
+    font-weight: bold;
+}
+.table>tbody>tr>td {
+    cursor: pointer;
+    cursor: hand;
+}
+.dt-buttons {
+    float: right;
+}
+.dataTables_filter {
+    float: left;
+}
+#reset-filters {
+    padding-top: 15px;
+}
