@@ -3,7 +3,8 @@ var chart = function () {
     if (_chart == null) {
         _chart = new Highcharts.StockChart({
             chart: {
-                renderTo: 'chart'
+                renderTo: 'chart',
+                zoomType: 'y'
             },
             rangeSelector: {
                 inputDateFormat: '%Y',
