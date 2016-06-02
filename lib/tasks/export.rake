@@ -1,7 +1,7 @@
-namespace :csv do
+namespace :export do
 
-  desc 'Dump database by value to a CSV'
-  task dump_by_value: :environment do
+  desc 'Export database by value to a CSV'
+  task csv_by_value: :environment do
     require 'csv'
     require 'ruby-progressbar'
 
@@ -25,8 +25,8 @@ namespace :csv do
     end
   end
 
-  desc 'Dump database by year to a CSV'
-  task dump_by_year: :environment do
+  desc 'Export database by year to a CSV'
+  task csv_by_year: :environment do
     require 'csv'
     require 'ruby-progressbar'
 
@@ -61,8 +61,8 @@ namespace :csv do
     end
   end
 
-  desc 'Dump database by ratio to a CSV'
-  task dump_by_ratio: :environment do
+  desc 'Export database by ratio to a CSV'
+  task csv_by_ratio: :environment do
     require 'csv'
     require 'ruby-progressbar'
 
@@ -93,6 +93,37 @@ namespace :csv do
         end
       end
     end
+  end
+
+  desc 'Export database to the datatables format used in the web'
+  task json_web: :environment do
+    require 'ruby-progressbar'
+
+    companies = Company.all
+    ratios = Ratio.all
+    years = (1987..2016).to_a.reverse
+    bar = ProgressBar.create title: 'Progress', total: years.size * companies.size * ratios.size
+    data = []
+
+    companies.each do |company|
+      ratios.each do |ratio|
+        next if Value.where(company: company, ratio: ratio).count < 1 # a company may not have certain ratios
+        row = [company.name, company.ticker, company.sector, company.country, ratio.name]
+        years.each do |year|
+          value = Value.where(company: company, ratio: ratio, year: year).first
+          row << (value.try(:value) or '')
+          bar.increment
+        end
+        data << row
+      end
+    end
+
+    print 'Writing JSON...'
+    File.open(Rails.root.join('web/ieb.json'), 'w:UTF-8') do |json|
+      json << MultiJson.dump({data: data})
+    end
+    puts 'done'
+
   end
 
 end
