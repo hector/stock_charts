@@ -1,3 +1,20 @@
+var _chart = null;
+var chart = function () {
+    if (_chart == null) {
+        _chart = new Highcharts.StockChart({
+            chart: {
+                renderTo: 'chart'
+            },
+            rangeSelector: {
+                inputDateFormat: '%Y',
+                inputEditDateFormat: '%Y'
+            }
+        });
+    }
+    return _chart;
+};
+
+var _datatable = null;
 var datatable = function () {
     return _datatable || $('#datos').DataTable();
 };
@@ -31,97 +48,18 @@ var init_complete = function () {
             });
 
         column.data().unique().sort().each(function (d, j) {
-            var s = (d == option_val) ? ' selected' : '';
+            var s = (d.replace(/\\/g, '') == option_val.replace(/\\/g, '')) ? ' selected' : '';
             select.append('<option value="' + d + '"' + s + '>' + d + '</option>')
         });
         filters_body.append(label);
     });
-    // Add reset filters button
-    var col = $('<div id="reset-filters" class="col-sm-2 text-center"></div>');
-    var reset_btn = $('<button class="btn btn-default">Borrar filtros</button>')
-        .appendTo(col)
-        .on('click', function (){
-            filters_body.find(':input')
-                .not(':button, :submit, :reset, :hidden')
-                .val('')
-                .removeAttr('checked')
-                .removeAttr('selected');
-            datatable().search( '' ).columns().search( '' ).draw();
-        });
-    filters_body.append(col);
 };
 
 var state_loaded = function (settings, data) {
     $('#global-search').val(data.search.search);
 };
 
-var _datatable = null, chart = null;
-
 $(function() {
-    data = [
-        [1243987200000,20.14],
-        [1244073600000,20.53],
-        [1244160000000,20.67],
-        [1244419200000,20.55],
-        [1244505600000,20.39],
-        [1244592000000,20.04],
-        [1244678400000,19.99],
-        [1244764800000,19.57],
-        [1245024000000,19.44],
-        [1245110400000,19.48],
-        [1245196800000,19.37],
-        [1245283200000,19.41],
-        [1245369600000,19.93],
-        [1245628800000,19.62],
-        [1245715200000,19.14],
-        [1245801600000,19.46],
-        [1245888000000,19.98],
-        [1245974400000,20.35],
-        [1246233600000,20.28],
-        [1246320000000,20.35],
-        /* Jul 2009 */
-        [1246406400000,20.40],
-        [1246492800000,20.00],
-        [1246838400000,19.80],
-        [1246924800000,19.34],
-        [1247011200000,19.60],
-        [1247097600000,19.48],
-        [1247184000000,19.79],
-        [1247443200000,20.33],
-        [1247529600000,20.32],
-        [1247616000000,20.98],
-        [1247702400000,21.07],
-        [1247788800000,21.68],
-        [1248048000000,21.84],
-        [1248134400000,21.64],
-        [1248220800000,22.39],
-        [1248307200000,22.55],
-        [1248393600000,22.86],
-        [1248652800000,22.87],
-        [1248739200000,22.86],
-        [1248825600000,22.86],
-        [1248912000000,23.26],
-        [1248998400000,23.34]
-    ]
-    // Chart
-    chart = new Highcharts.StockChart({
-        chart: {
-            renderTo: 'chart'
-        }
-    });
-    chart.addSeries({
-        name : 'AAPL Stock Price',
-        data : data,
-        marker : {
-            enabled : true,
-            radius : 3
-        },
-        shadow : true,
-        tooltip : {
-            valueDecimals : 2
-        }
-    });
-
     // Datatable
     _datatable = $('#datos').DataTable({
         ajax: 'ieb.json',
@@ -132,7 +70,6 @@ $(function() {
             { data: 2 },
             { data: 3 },
             { data: 4 },
-            { data: 5 },
             { data: 5 },
             { data: 6 },
             { data: 7 },
@@ -160,7 +97,9 @@ $(function() {
             { data: 29 },
             { data: 30 },
             { data: 31 },
-            { data: 32 }
+            { data: 32 },
+            { data: 33 },
+            { data: 34 }
         ],
         language: {
             url: 'https://cdn.datatables.net/plug-ins/1.10.11/i18n/Spanish.json',
@@ -182,7 +121,7 @@ $(function() {
         stateLoaded: state_loaded,
         // Extensions
         fixedColumns: {
-            leftColumns: 4
+            leftColumns: 5
         },
         select: {
             style: 'multi+shift'
@@ -204,10 +143,57 @@ $(function() {
             }
         ]
     });
+
+    // Reset filters button
+    $('#reset-filters-btn').on('click', function (){
+        $(':input', '#filters-body')
+            .not(':button, :submit, :reset, :hidden')
+            .val('')
+            .removeAttr('checked')
+            .removeAttr('selected');
+        datatable().search( '' ).columns().search( '' ).draw();
+    });
+
+    // Draw selected row
+    var rowSeries = {};
     _datatable.on('select', function (e, datatable, type, indexes) {
         if (type != 'row') return;
+        var headers = datatable.columns().header(),
+            row, values, year, value;
         indexes.forEach(function(index) {
-            datatable.rows(index)
+            var data = [];
+            row = datatable.rows(index);
+            values = row.data()[0];
+            for(var i=(headers.length-1); i>4; i--) {
+                year = new Date(headers[i].innerHTML + '-01-01T00:00:00').valueOf();
+                value = values[i] ? parseFloat(values[i]) : null;
+                data.push([year, value]);
+            }
+            rowSeries[index] = chart().addSeries({
+                name: values[1] + " " + values[4],
+                data: data,
+                marker : {
+                    enabled : true,
+                    radius : 3
+                },
+                shadow : true,
+                tooltip : {
+                    valueDecimals : 2
+                }
+            });
+        });
+    });
+
+    // Erase unselected row
+    _datatable.on('deselect', function (e, datatable, type, indexes) {
+        if (type != 'row') return;
+        var series;
+        indexes.forEach(function(index) {
+            series = rowSeries[index];
+            if (series) {
+                series.remove();
+                delete rowSeries[index]
+            }
         });
     });
 });

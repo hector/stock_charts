@@ -1,6 +1,9 @@
 th {
     font-weight: bold;
 }
+.table {
+    white-space: nowrap;
+}
 .table>tbody>tr>td {
     cursor: pointer;
     cursor: hand;

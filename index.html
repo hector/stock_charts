@@ -42,13 +42,10 @@
             <p class="lead">Visualiza los datos fundamentales de las empresas de <a href="http://www.invertirenbolsa.info/historico_dividendos.htm">InvertirEnBolsa</a></p>
         </div>
 
-        <div id="chart"></div>
-
-        <hr>
-
         <h3 class="text-center">Datos</h3>
         <div class="panel panel-default row">
             <div class="panel-heading">
+                <button id="reset-filters-btn" class="btn btn-default btn-xs" style="float: right">Borrar filtros</button>
                 <h3 class="panel-title">Filtros</h3>
             </div>
             <div id="filters-body" class="panel-body">
@@ -65,6 +62,7 @@
                     <th class="bg-primary">Ticker</th>
                     <th class="bg-primary">Sector</th>
                     <th class="bg-primary">País</th>
+                    <th class="bg-primary">Ratio</th>
                     <th class="year">2016</th>
                     <th class="year">2015</th>
                     <th class="year">2014</th>
@@ -97,45 +95,10 @@
                     <th class="year">1987</th>
                 </tr>
             </thead>
-            <tfoot>
-                <tr>
-                    <th class="bg-primary">Empresa</th>
-                    <th class="bg-primary">Ticker</th>
-                    <th class="bg-primary">Sector</th>
-                    <th class="bg-primary">País</th>
-                    <th class="year">2016</th>
-                    <th class="year">2015</th>
-                    <th class="year">2014</th>
-                    <th class="year">2013</th>
-                    <th class="year">2012</th>
-                    <th class="year">2011</th>
-                    <th class="year">2010</th>
-                    <th class="year">2009</th>
-                    <th class="year">2008</th>
-                    <th class="year">2007</th>
-                    <th class="year">2006</th>
-                    <th class="year">2005</th>
-                    <th class="year">2004</th>
-                    <th class="year">2003</th>
-                    <th class="year">2002</th>
-                    <th class="year">2001</th>
-                    <th class="year">2000</th>
-                    <th class="year">1999</th>
-                    <th class="year">1998</th>
-                    <th class="year">1997</th>
-                    <th class="year">1996</th>
-                    <th class="year">1995</th>
-                    <th class="year">1994</th>
-                    <th class="year">1993</th>
-                    <th class="year">1992</th>
-                    <th class="year">1991</th>
-                    <th class="year">1990</th>
-                    <th class="year">1989</th>
-                    <th class="year">1988</th>
-                    <th class="year">1987</th>
-                </tr>
-            </tfoot>
         </table>
+
+        <hr>
+        <div id="chart"></div>
     </div>
 
     <footer class="footer">
